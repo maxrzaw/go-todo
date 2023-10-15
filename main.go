@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -252,5 +253,8 @@ func main() {
 	// /todo/list
 	router.HandleFunc("/todo/list", GetTodoItems).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":80", router))
+	handler := cors.New(
+		cors.Options{AllowedMethods: []string{"GET", "POST", "DELETE"}},
+	).Handler(router)
+	log.Fatal(http.ListenAndServe(":80", handler))
 }
