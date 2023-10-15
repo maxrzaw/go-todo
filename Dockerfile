@@ -14,7 +14,7 @@ RUN go mod download
 COPY *.go ./
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping
+RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-go-todo
 
 # Optional:
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.
@@ -27,4 +27,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/healthz || exit 1
 
 # Run
-CMD ["/docker-gs-ping"]
+CMD ["/docker-go-todo"]

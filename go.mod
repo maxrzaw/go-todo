@@ -1,4 +1,4 @@
-module github.com/maxrzaw/strava-reminders
+module github.com/maxrzaw/go-todo
 
 go 1.21.3
 
