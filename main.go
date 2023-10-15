@@ -23,7 +23,7 @@ type CreateTodoItemRequest struct {
 	Description string
 }
 
-type TodoItemModel struct {
+type TodoItem struct {
 	Id          int `gorm:"primary_key"`
 	Description string
 	Completed   bool
@@ -31,7 +31,7 @@ type TodoItemModel struct {
 	UpdatedAt   time.Time `gorm:"autoUpdateTime:true"`
 }
 
-type HealthCheckModel struct {
+type HealthCheck struct {
 	Id        int `gorm:"primary_key"`
 	UUID      uuid.UUID
 	UpdatedAt time.Time `gorm:"autoUpdateTime:true"`
@@ -40,7 +40,7 @@ type HealthCheckModel struct {
 func Healthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	db_connection := "healthy"
-	var result HealthCheckModel
+	var result HealthCheck
 
 	db.Where("UUID = ?", hc_uuid).First(&result)
 
@@ -59,7 +59,7 @@ func init() {
 }
 
 func GetItemById(Id int) bool {
-	todo := &TodoItemModel{}
+	todo := &TodoItem{}
 	result := db.First(&todo, Id)
 	if result.Error != nil {
 		log.Warn("TodoItem not found in database")
@@ -78,7 +78,7 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 
 	log.WithFields(log.Fields{"Description": body.Description}).Info("Adding new TodoItem.")
 
-	todo := &TodoItemModel{Description: body.Description, Completed: false}
+	todo := &TodoItem{Description: body.Description, Completed: false}
 	db.Create(&todo)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -106,7 +106,7 @@ func MarkItem(w http.ResponseWriter, r *http.Request, completed bool) {
 	} else {
 		log.WithFields(log.Fields{"Id": id, "Completed": completed}).Info("Updating Completed Status.")
 
-		todo := &TodoItemModel{}
+		todo := &TodoItem{}
 		db.First(&todo, id)
 		todo.Completed = true
 		db.Save(&todo)
@@ -136,7 +136,7 @@ func UpdateItemDescription(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.WithFields(log.Fields{"Id": id, "Description": body.Description}).Info("Updating TodoItem")
 
-		todo := &TodoItemModel{}
+		todo := &TodoItem{}
 		db.First(&todo, id)
 		todo.Description = body.Description
 		db.Save(&todo)
@@ -152,7 +152,7 @@ func GetItem(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(vars["id"])
 
 	// Test if the TodoItem exist in DB
-	todo := &TodoItemModel{}
+	todo := &TodoItem{}
 	result := db.First(&todo, id)
 	if result.Error != nil {
 		w.WriteHeader(404)
@@ -176,7 +176,7 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, `{"deleted": false, "error": "Record Not Found"}`)
 	} else {
 		log.WithFields(log.Fields{"Id": id}).Info("Deleting TodoItem")
-		todo := &TodoItemModel{}
+		todo := &TodoItem{}
 		db.First(&todo, id)
 		db.Delete(&todo)
 		w.Header().Set("Content-Type", "application/json")
@@ -185,7 +185,7 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTodoItems(w http.ResponseWriter, r *http.Request) {
-	var todos []TodoItemModel
+	var todos []TodoItem
 	param := r.URL.Query().Get("completed")
 	if param != "" {
 		completed, err := strconv.ParseBool(param)
@@ -218,20 +218,20 @@ func InitDB() {
 		panic("failed to connect database")
 	}
 
-	db.Debug().Migrator().AutoMigrate(&HealthCheckModel{})
+	db.Debug().Migrator().AutoMigrate(&HealthCheck{})
 	hc_uuid = uuid.New()
-	hcm := HealthCheckModel{UUID: hc_uuid}
+	hcm := HealthCheck{UUID: hc_uuid}
 	db.Create(&hcm)
 }
 
 func main() {
 	InitDB()
 	// Migrate the schema
-	if db.Debug().Migrator().HasTable(&TodoItemModel{}) {
+	if db.Debug().Migrator().HasTable(&TodoItem{}) {
 		// I don't think this is needed
 		// db.Debug().Migrator().DropTable(&TodoItemModel{})
 	}
-	db.Debug().Migrator().AutoMigrate(&TodoItemModel{})
+	db.Debug().Migrator().AutoMigrate(&TodoItem{})
 
 	log.Info("Starting API Server")
 	router := mux.NewRouter()
