@@ -1,2 +1,2 @@
-# strava-reminders
-Making use of the Strava API
+# Go Todo;
+Basic Todo API written in Golang
