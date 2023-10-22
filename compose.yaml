@@ -4,40 +4,49 @@ services:
   server:
     build: .
     depends_on:
-      db:
+      pg:
         condition: service_healthy
     ports:
       - "8080:80"
     environment:
-      MYSQL_HOST: ${MYSQL_HOST}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DB}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: 5432
+      POSTGRES_TZ: America/Detroit
+    healthcheck:
+      test: curl --fail http://localhost/api/healthz || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    develop:
+      watch:
+        - action: rebuild
+          path: ./main.go
 
-  db:
-    image: mysql
+  pg:
+    image: postgres
     restart: always
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - db_volume:/var/lib/mysql
+      - pgdata:/var/lib/postgresql/data
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      POSTGRES_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
+      test: [ "CMD-SHELL", "pg_isready", "-d", "${POSTGRES_DB}" ]
 
   adminer:
     image: adminer
     depends_on:
-      db:
+      pg:
         condition: service_healthy
     restart: always
     ports:
       - "9000:8080"
 
-
 volumes:
-  db_volume:
+  pgdata:

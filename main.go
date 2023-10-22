@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -39,6 +39,7 @@ type HealthCheck struct {
 }
 
 func Healthz(w http.ResponseWriter, r *http.Request) {
+	log.Info("healthcheck called")
 	w.Header().Set("Content-Type", "application/json")
 	db_connection := "healthy"
 	var result HealthCheck
@@ -158,7 +159,7 @@ func GetItem(w http.ResponseWriter, r *http.Request) {
 	if result.Error != nil {
 		w.WriteHeader(404)
 	} else {
-		log.WithFields(log.Fields{"Id": id}).Info("Deleting TodoItem")
+		log.WithFields(log.Fields{"Id": id}).Info("Getting TodoItem")
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(todo)
 	}
@@ -188,13 +189,13 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) {
 func GetTodoItems(w http.ResponseWriter, r *http.Request) {
 	var todos []TodoItem
 	param := r.URL.Query().Get("completed")
+	log.WithFields(log.Fields{"Completed": param}).Info("Getting Todo Items")
 	if param != "" {
 		completed, err := strconv.ParseBool(param)
 		if err != nil {
 			panic(err)
 		}
 		db.Find(&todos, "completed = ?", completed)
-
 	} else {
 		db.Find(&todos)
 	}
@@ -204,16 +205,18 @@ func GetTodoItems(w http.ResponseWriter, r *http.Request) {
 
 func InitDB() {
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		os.Getenv("MYSQL_USER"),
-		os.Getenv("MYSQL_PASSWORD"),
-		os.Getenv("MYSQL_HOST"),
-		os.Getenv("MYSQL_DATABASE"),
+		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable TimeZone=%s",
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DATABASE"),
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_TZ"),
 	)
 	log.Info(dsn)
 
 	var err error
-	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Error(err)
 		panic("failed to connect database")
@@ -238,20 +241,20 @@ func main() {
 	router := mux.NewRouter()
 
 	// Health Check
-	router.HandleFunc("/healthz", Healthz).Methods("GET")
+	router.HandleFunc("/api/healthz", Healthz).Methods("GET")
 
 	// /todo
-	router.HandleFunc("/todo", CreateItem).Methods("POST")
+	router.HandleFunc("/api/todos/todo", CreateItem).Methods("POST")
+
+	// /todos
+	router.HandleFunc("/api/todos/list", GetTodoItems).Methods("GET")
 
 	// /todo/{id}
-	router.HandleFunc("/todo/{id}", GetItem).Methods("GET")
-	router.HandleFunc("/todo/{id}", DeleteItem).Methods("DELETE")
-	router.HandleFunc("/todo/{id}/update-description", UpdateItemDescription).Methods("POST")
-	router.HandleFunc("/todo/{id}/mark-complete", MarkItemAsComplete).Methods("POST")
-	router.HandleFunc("/todo/{id}/mark-incomplete", MarkItemAsIncomplete).Methods("POST")
-
-	// /todo/list
-	router.HandleFunc("/todo/list", GetTodoItems).Methods("GET")
+	router.HandleFunc("/api/todos/todo/{id}", GetItem).Methods("GET")
+	router.HandleFunc("/api/todos/todo/{id}", DeleteItem).Methods("DELETE")
+	router.HandleFunc("/api/todos/todo/{id}/update-description", UpdateItemDescription).Methods("POST")
+	router.HandleFunc("/api/todos/todo/{id}/mark-complete", MarkItemAsComplete).Methods("POST")
+	router.HandleFunc("/api/todos/todo/{id}/mark-incomplete", MarkItemAsIncomplete).Methods("POST")
 
 	handler := cors.New(
 		cors.Options{AllowedMethods: []string{"GET", "POST", "DELETE"}},
