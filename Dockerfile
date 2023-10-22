@@ -24,7 +24,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-go-todo
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/healthz || exit 1
+    CMD curl -f http://localhost/api/healthz || exit 1
 
 # Run
 CMD ["/docker-go-todo"]
