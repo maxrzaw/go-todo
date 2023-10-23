@@ -1,9 +1,8 @@
 package handlers
 
 import (
+	"html/template"
 	"io"
-	"net/http"
-	"text/template"
 
 	"github.com/labstack/echo/v4"
 )
@@ -26,6 +25,7 @@ func AddHandlers(e *echo.Echo) {
 	e.Renderer = t
 
 	e.GET("index.html", Index)
+	e.POST("/todo", Todo)
 	api := e.Group("/api")
 	api.GET("/healthz", Healthz)
 
@@ -40,8 +40,4 @@ func AddHandlers(e *echo.Echo) {
 	todo.POST("/:id/update-description", UpdateTodoDescription)
 	todo.POST("/:id/mark-complete", MarkTodoComplete)
 	todo.POST("/:id/mark-incomplete", MarkTodoIncomplete)
-}
-
-func Index(c echo.Context) error {
-	return c.Render(http.StatusOK, "index", map[string]interface{}{})
 }
