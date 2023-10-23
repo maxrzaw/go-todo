@@ -3,16 +3,16 @@
 <script src="https://unpkg.com/htmx.org@1.9.6"></script>
 <html>
     <head>
-        <title>TODO</title>
+        <title>go-todo</title>
     </head>
     <body>
-        <h1>Todo Go</h1>
-        <p>Hello World!</p>
+        <h1>go-todo</h1>
         <form hx-post="/todo" hx-target="#todos" hx-swap="beforeend" hx-on::after-request=" if(event.detail.successful) this.reset()">
             <label for="description">Description:</label><br>
             <input type="text" name="description" id="description">
             <input type="submit">
         </form>
+        <h2>Todos:</h2>
         <ul id="todos">
             {{ range . }}
             <li>{{ .Description }}</li>
