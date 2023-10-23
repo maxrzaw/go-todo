@@ -11,10 +11,12 @@ func main() {
 	models.InitDb()
 
 	e := echo.New()
+
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.Secure())
 	e.Use(middleware.CORS())
+
 	handlers.AddHandlers(e)
 	e.Logger.Fatal(e.Start(":80"))
 }
