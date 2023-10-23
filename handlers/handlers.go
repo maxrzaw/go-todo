@@ -1,33 +1,24 @@
 package handlers
 
 import (
-	"net/http"
-
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
+	"github.com/labstack/echo/v4"
 )
 
-func Init() http.Handler {
-	router := mux.NewRouter()
+func AddHandlers(e *echo.Echo) {
+	e.Logger.Warn("Adding handlers")
 
-	// Health Check
-	router.HandleFunc("/api/healthz", Healthz).Methods("GET")
+	api := e.Group("/api")
+	api.GET("/healthz", Healthz)
 
-	// /todo
-	router.HandleFunc("/api/todos/todo", CreateItem).Methods("POST")
+	todos := api.Group("/todos")
+	todos.GET("/list", GetTodos)
 
-	// /todos
-	router.HandleFunc("/api/todos/list", GetTodoItems).Methods("GET")
+	todo := todos.Group("/todo")
+	todo.POST("", CreateItem)
+	todo.GET("/:id", GetTodo)
+	todo.DELETE("/:id", DeleteTodo)
 
-	// /todo/{id}
-	router.HandleFunc("/api/todos/todo/{id}", GetItem).Methods("GET")
-	router.HandleFunc("/api/todos/todo/{id}", DeleteItem).Methods("DELETE")
-	router.HandleFunc("/api/todos/todo/{id}/update-description", UpdateItemDescription).Methods("POST")
-	router.HandleFunc("/api/todos/todo/{id}/mark-complete", MarkItemAsComplete).Methods("POST")
-	router.HandleFunc("/api/todos/todo/{id}/mark-incomplete", MarkItemAsIncomplete).Methods("POST")
-
-	handler := cors.New(
-		cors.Options{AllowedMethods: []string{"GET", "POST", "DELETE"}},
-	).Handler(router)
-	return handler
+	todo.POST("/:id/update-description", UpdateTodoDescription)
+	todo.POST("/:id/mark-complete", MarkTodoComplete)
+	todo.POST("/:id/mark-incomplete", MarkTodoIncomplete)
 }

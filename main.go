@@ -1,22 +1,20 @@
 package main
 
 import (
-	"net/http"
-
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/maxrzaw/go-todo/handlers"
 	"github.com/maxrzaw/go-todo/models"
-	"github.com/sirupsen/logrus"
 )
-
-func init() {
-	logrus.SetFormatter(&logrus.TextFormatter{})
-	logrus.SetReportCaller(true)
-}
 
 func main() {
 	models.InitDb()
 
-	logrus.Info("Starting API Server")
-	handler := handlers.Init()
-	logrus.Fatal(http.ListenAndServe(":80", handler))
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.Secure())
+	e.Use(middleware.CORS())
+	handlers.AddHandlers(e)
+	e.Logger.Fatal(e.Start(":80"))
 }

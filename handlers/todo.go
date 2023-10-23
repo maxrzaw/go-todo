@@ -1,159 +1,220 @@
 package handlers
 
 import (
-	"encoding/json"
-	"io"
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/maxrzaw/go-todo/models"
-	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
-type CreateTodoItemRequest struct {
-	Description string
-}
-
-func GetItemById(Id int) bool {
-	todo := &models.TodoItem{}
-	result := models.DB.First(&todo, Id)
-	if result.Error != nil {
-		logrus.Warn("TodoItem not found in database")
-		return false
+func CreateItem(c echo.Context) error {
+	t := new(models.TodoItem)
+	if err := c.Bind(t); err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
 	}
-	return true
-}
+	c.Logger().Info("Adding new TodoItem")
 
-func CreateItem(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	var body CreateTodoItemRequest
-	err := decoder.Decode(&body)
-	if err != nil {
-		panic(err)
+	todo := &models.TodoItem{Description: t.Description, Completed: false}
+	if err := models.DB.Create(&todo).Error; err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	logrus.WithFields(logrus.Fields{"Description": body.Description}).Info("Adding new TodoItem.")
-
-	todo := &models.TodoItem{Description: body.Description, Completed: false}
-	models.DB.Create(&todo)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(todo)
-}
-
-func MarkItemAsComplete(w http.ResponseWriter, r *http.Request) {
-	MarkItem(w, r, true)
-}
-
-func MarkItemAsIncomplete(w http.ResponseWriter, r *http.Request) {
-	MarkItem(w, r, false)
-}
-
-func MarkItem(w http.ResponseWriter, r *http.Request, completed bool) {
-	// Get URL parameter from mux
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	exists := GetItemById(id)
-	if exists == false {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		io.WriteString(w, `{"updated": false, "error": "Record Not Found"}`)
-	} else {
-		logrus.WithFields(logrus.Fields{"Id": id, "Completed": completed}).Info("Updating Completed Status.")
-
-		todo := &models.TodoItem{}
-		models.DB.First(&todo, id)
-		todo.Completed = true
-		models.DB.Save(&todo)
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(todo)
-	}
-}
-
-func UpdateItemDescription(w http.ResponseWriter, r *http.Request) {
-	// Get URL parameter from mux
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	decoder := json.NewDecoder(r.Body)
-	var body CreateTodoItemRequest
-	err := decoder.Decode(&body)
-	if err != nil {
-		panic(err)
+	response := map[string]interface{}{
+		"created": todo,
 	}
 
-	// Test if the TodoItem exist in DB
-	exists := GetItemById(id)
-	if exists == false {
-		w.Header().Set("Content-Type", "application/json")
-		io.WriteString(w, `{"updated": false, "error": "Record Not Found"}`)
-	} else {
-		logrus.WithFields(logrus.Fields{"Id": id, "Description": body.Description}).Info("Updating TodoItem")
-
-		todo := &models.TodoItem{}
-		models.DB.First(&todo, id)
-		todo.Description = body.Description
-		models.DB.Save(&todo)
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(todo)
-	}
+	return c.JSON(http.StatusOK, response)
 }
 
-func GetItem(w http.ResponseWriter, r *http.Request) {
-	// Get URL parameter from mux
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	// Test if the TodoItem exist in DB
-	todo := &models.TodoItem{}
-	result := models.DB.First(&todo, id)
-	if result.Error != nil {
-		w.WriteHeader(404)
-	} else {
-		logrus.WithFields(logrus.Fields{"Id": id}).Info("Getting TodoItem")
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(todo)
-	}
+func MarkTodoComplete(c echo.Context) error {
+	return MarkItem(c, true)
 }
 
-func DeleteItem(w http.ResponseWriter, r *http.Request) {
-	// Get URL parameter from mux
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	// Test if the TodoItem exist in DB
-	exists := GetItemById(id)
-	if exists == false {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		io.WriteString(w, `{"deleted": false, "error": "Record Not Found"}`)
-	} else {
-		logrus.WithFields(logrus.Fields{"Id": id}).Info("Deleting TodoItem")
-		todo := &models.TodoItem{}
-		models.DB.First(&todo, id)
-		models.DB.Delete(&todo)
-		w.Header().Set("Content-Type", "application/json")
-		io.WriteString(w, `{"deleted": true}`)
-	}
+func MarkTodoIncomplete(c echo.Context) error {
+	return MarkItem(c, false)
 }
 
-func GetTodoItems(w http.ResponseWriter, r *http.Request) {
-	var todos []models.TodoItem
-	param := r.URL.Query().Get("completed")
-	logrus.WithFields(logrus.Fields{"Completed": param}).Info("Getting Todo Items")
+func MarkItem(c echo.Context, completed bool) error {
+	// Get URL parameter from echo
+	id := c.Param("id")
+	t := new(models.TodoItem)
+
+	if err := c.Bind(t); err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	todo := new(models.TodoItem)
+	if err := models.DB.First(&todo, id).Error; err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+
+		if err.Error() == "record not found" {
+			return c.JSON(http.StatusNotFound, data)
+		}
+
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	todo.Completed = completed
+
+	if err := models.DB.Save(&todo).Error; err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	return c.JSON(http.StatusOK, todo)
+}
+
+func UpdateTodoDescription(c echo.Context) error {
+	// Get URL parameter from echo
+	id := c.Param("id")
+	t := new(models.TodoItem)
+
+	if err := c.Bind(t); err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	existing_todo := new(models.TodoItem)
+	if err := models.DB.First(&existing_todo, id).Error; err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+
+		if err.Error() == "record not found" {
+			return c.JSON(http.StatusNotFound, data)
+		}
+
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	existing_todo.Description = t.Description
+
+	if err := models.DB.Save(&existing_todo).Error; err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+
+		if err.Error() == "record not found" {
+			return c.JSON(http.StatusNotFound, data)
+		}
+
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	response := map[string]interface{}{
+		"data": existing_todo,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func GetTodo(c echo.Context) error {
+	// Get URL parameter from echo
+	id := c.Param("id")
+	c.Logger().Info(id)
+
+	var todos []*models.TodoItem
+	if res := models.DB.Debug().Find(&todos, id); res.Error != nil {
+		data := map[string]interface{}{
+			"message": res.Error.Error(),
+		}
+
+		if res.Error.Error() == "record not found" {
+			return c.JSON(http.StatusNotFound, data)
+		}
+
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	response := map[string]interface{}{
+		"data": todos[0],
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func DeleteTodo(c echo.Context) error {
+	// Get URL parameter from echo
+	id := c.Param("id")
+	t := new(models.TodoItem)
+
+	if err := c.Bind(t); err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+
+		if err.Error() == "record not found" {
+			return c.JSON(http.StatusNotFound, data)
+		}
+
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	existing_todo := new(models.TodoItem)
+	if err := models.DB.First(&existing_todo, id).Error; err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	if err := models.DB.Delete(&existing_todo).Error; err != nil {
+		data := map[string]interface{}{
+			"message": err.Error(),
+		}
+
+		if err.Error() == "record not found" {
+			return c.JSON(http.StatusNotFound, data)
+		}
+
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	response := map[string]interface{}{
+		"deleted": "true",
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func GetTodos(c echo.Context) error {
+	// Get URL parameter from echo
+	param := c.QueryParam("completed")
+
+	var todos []*models.TodoItem
+	var res *gorm.DB
 	if param != "" {
 		completed, err := strconv.ParseBool(param)
 		if err != nil {
 			panic(err)
 		}
-		models.DB.Find(&todos, "completed = ?", completed)
+		res = models.DB.Find(&todos, "completed = ?", completed)
 	} else {
-		models.DB.Find(&todos)
+		res = models.DB.Find(&todos)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(todos)
+	if res.Error != nil {
+		data := map[string]interface{}{
+			"message": res.Error.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, data)
+	}
+
+	return c.JSON(http.StatusOK, todos)
 }

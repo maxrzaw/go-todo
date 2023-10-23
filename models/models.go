@@ -5,8 +5,6 @@ import (
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -39,18 +37,16 @@ func InitDb() {
 		os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_TZ"),
 	)
-	log.Info(dsn)
 
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Error(err)
 		panic("failed to connect database")
 	}
 
-	DB.Debug().Migrator().AutoMigrate(&HealthCheck{})
+	DB.Migrator().AutoMigrate(&HealthCheck{})
 	Hc_uuid = uuid.New()
 	hcm := HealthCheck{UUID: Hc_uuid}
 	DB.Create(&hcm)
-	DB.Debug().Migrator().AutoMigrate(&TodoItem{})
+	DB.Migrator().AutoMigrate(&TodoItem{})
 }

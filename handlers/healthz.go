@@ -1,27 +1,30 @@
 package handlers
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
 	"github.com/maxrzaw/go-todo/models"
-	"github.com/sirupsen/logrus"
 )
 
-func Healthz(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("healthcheck called")
-	w.Header().Set("Content-Type", "application/json")
-	db_connection := "healthy"
+type HealthCheckResponse struct {
+	Alive    bool   `json:"alive" xml:"alive"`
+	Database string `json:"database" xml:"database"`
+}
+
+func Healthz(c echo.Context) error {
+	status := http.StatusOK
+	r := &HealthCheckResponse{
+		Alive:    true,
+		Database: "healthy",
+	}
 	var result models.HealthCheck
 
 	models.DB.Where("UUID = ?", models.Hc_uuid).First(&result)
 
 	if result.UUID != models.Hc_uuid {
-		db_connection = "unhealthy"
-		w.WriteHeader(400)
+		r.Database = "unhealthy"
+		status = http.StatusServiceUnavailable
 	}
-
-	response := fmt.Sprintf(`{"alive": true, "database": "%s"}`, db_connection)
-	io.WriteString(w, response)
+	return c.JSON(status, r)
 }
