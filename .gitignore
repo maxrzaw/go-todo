@@ -22,3 +22,6 @@ go.work
 
 # Environment File
 .env
+
+node_modules
+.air

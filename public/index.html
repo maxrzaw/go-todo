@@ -1,0 +1,19 @@
+{{define "title"}}Go TODO{{end}} {{define "body"}}
+<h1 class="">Go TODO!</h1>
+<form
+  hx-post="/todo"
+  hx-target="#todos"
+  hx-swap="beforeend"
+  hx-on::after-request=" if(event.detail.successful) this.reset()"
+>
+  <label for="description">Description:</label><br />
+  <input type="text" name="description" id="description" />
+  <button type="submit" class="border rounded border-black bg-red-100 p-1">Submit</button>
+</form>
+<h2>Todos:</h2>
+<div class="bg-purple-100 p-4 rounded-xl">
+  <ul id="todos">
+    {{ range . }} {{ template "todo.html" . }} {{ end }}
+  </ul>
+</div>
+{{end}}

@@ -1,0 +1,9 @@
+*
+!**/*.go
+!**/*.html
+!dist/*.css
+!go.mod
+!go.sum
+!package.json
+!package-lock.json
+!tailwind.config.js

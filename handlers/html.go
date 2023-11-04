@@ -19,7 +19,7 @@ func Index(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	return c.Render(http.StatusOK, "index", todos)
+	return c.Render(http.StatusOK, "index.html", todos)
 }
 
 func Todo(c echo.Context) error {
@@ -34,5 +34,5 @@ func Todo(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	return c.Render(http.StatusOK, "todo", todo)
+	return c.Render(http.StatusOK, "todo.html", todo)
 }
