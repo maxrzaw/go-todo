@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -13,15 +12,7 @@ import (
 )
 
 func main() {
-	env := os.Getenv("TODO_ENV")
-	if env == "" {
-		env = "local"
-	}
-	err := godotenv.Load(".env." + env)
-	if err != nil {
-		log.Fatal("Error loading .env.env file")
-	}
-	godotenv.Load()
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
