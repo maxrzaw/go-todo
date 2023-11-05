@@ -3,7 +3,7 @@
   <div class="p-1">
     <h2>Active Todos:</h2>
     <div class="rounded bg-gray-300 p-2">
-      <ul id="active-todos" class="flex flex-col gap-1">
+      <ul id="active-todos" class="flex flex-col">
         {{ range . }}
           {{ if not .Completed }}
             {{ template "todo.html" . }}
@@ -33,7 +33,7 @@
     </div>
     <h2>Completed Todos:</h2>
     <div class="rounded bg-gray-300 p-2">
-      <ul id="completed-todos" class="flex flex-col gap-1">
+      <ul id="completed-todos" class="flex flex-col">
         {{ range . }}
           {{ if .Completed }}
             {{ template "todo.html" . }}

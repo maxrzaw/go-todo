@@ -11,7 +11,7 @@ import (
 func Index(c echo.Context) error {
 	var todos []*models.TodoItem
 	var res *gorm.DB
-	res = models.DB.Find(&todos)
+	res = models.DB.Find(&todos).Order("updated_at asc")
 	if res.Error != nil {
 		data := map[string]interface{}{
 			"message": res.Error.Error(),
@@ -105,14 +105,14 @@ func MarkTodo(c echo.Context, completed bool) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	if completed {
-		c.Response().Header().Set("HX-Retarget", "#completed-todos")
-	} else {
-		c.Response().Header().Set("HX-Retarget", "#active-todos")
-	}
+	// if completed {
+	// 	c.Response().Header().Set("HX-Retarget", "#completed-todos")
+	// } else {
+	// 	c.Response().Header().Set("HX-Retarget", "#active-todos")
+	// }
 
-	c.Response().Header().Set("HX-Reswap", "beforeend")
-	return c.Render(http.StatusOK, "todo.html", todo)
+	// c.Response().Header().Set("HX-Reswap", "beforeend")
+	return c.Render(http.StatusOK, "move-todo.html", todo)
 }
 
 func Todo(c echo.Context) error {

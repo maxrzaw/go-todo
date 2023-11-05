@@ -1,5 +1,12 @@
-{{ define "todo.html" }}
-  <li id="todo-{{ .Id }}">
+{{ define "move-todo.html" }}
+  <li
+    id="todo-{{ .Id }}"
+    _="init put me at the end of {{ if .Completed }}
+      #completed-todos
+    {{ else }}
+      #active-todos
+    {{ end }}"
+  >
     <div class="flex items-center gap-1 py-1">
       <p>{{ .Description }}</p>
       {{ if .Completed }}

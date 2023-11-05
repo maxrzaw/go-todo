@@ -23,5 +23,10 @@ go.work
 # Environment File
 .env
 
+# Tailwind files
+dist
+
 node_modules
+
+# Air directory
 .air
