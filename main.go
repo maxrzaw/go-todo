@@ -34,17 +34,17 @@ func main() {
 		template.TemplateRecipe{
 			Name:  "todo.html",
 			Base:  "todo.html",
-			Paths: []string{"public/todo.html"},
+			Paths: []string{"public/todo.base.html", "public/todo.html"},
 		},
 		template.TemplateRecipe{
 			Name:  "move-todo.html",
 			Base:  "move-todo.html",
-			Paths: []string{"public/move-todo.html"},
+			Paths: []string{"public/todo.base.html", "public/move-todo.html"},
 		},
 		template.TemplateRecipe{
 			Name:  "index.html",
 			Base:  "base.html",
-			Paths: []string{"public/index.html", "public/todo.html", "public/base.html"},
+			Paths: []string{"public/index.html", "public/todo.html", "public/base.html", "public/todo.base.html"},
 		},
 	)
 

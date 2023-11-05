@@ -7,32 +7,6 @@
       #active-todos
     {{ end }}"
   >
-    <div class="flex items-center gap-1 py-1">
-      <p>{{ .Description }}</p>
-      {{ if .Completed }}
-        <button
-          hx-put="/todo/{{ .Id }}/mark-active"
-          hx-target="closest li"
-          class="items-center rounded-md bg-green-300 px-1 hover:bg-green-500"
-        >
-          <i class="fa fa-check"></i> Mark Active
-        </button>
-      {{ else }}
-        <button
-          hx-put="/todo/{{ .Id }}/mark-complete"
-          hx-target="closest li"
-          class="items-center rounded-md bg-green-300 px-1 hover:bg-green-500"
-        >
-          <i class="fa fa-check"></i> Mark Complete
-        </button>
-      {{ end }}
-      <button
-        hx-delete="/todo/{{ .Id }}"
-        hx-target="closest li"
-        class="items-center rounded-md bg-red-300 px-1 hover:bg-red-500"
-      >
-        <i class="fa fa-close"></i> Delete
-      </button>
-    </div>
+    {{ template "todo.base.html" . }}
   </li>
 {{ end }}
