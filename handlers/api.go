@@ -60,7 +60,7 @@ func MarkTodoComplete(c echo.Context) error {
 	return MarkItem(c, true)
 }
 
-func MarkTodoIncomplete(c echo.Context) error {
+func MarkTodoActive(c echo.Context) error {
 	return MarkItem(c, false)
 }
 

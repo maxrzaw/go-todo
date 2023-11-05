@@ -9,6 +9,10 @@ func AddHandlers(e *echo.Echo) {
 
 	e.GET("index.html", Index)
 	e.POST("/todo", Todo)
+	e.PUT("/todo/:id/mark-complete", CompleteTodo)
+	e.PUT("/todo/:id/mark-active", ActiveTodo)
+	e.DELETE("/todo/:id", RemoveTodo)
+
 	api := e.Group("/api")
 	api.GET("/healthz", Healthz)
 
@@ -22,5 +26,5 @@ func AddHandlers(e *echo.Echo) {
 
 	todo.POST("/:id/update-description", UpdateTodoDescription)
 	todo.POST("/:id/mark-complete", MarkTodoComplete)
-	todo.POST("/:id/mark-incomplete", MarkTodoIncomplete)
+	todo.POST("/:id/mark-active", MarkTodoActive)
 }

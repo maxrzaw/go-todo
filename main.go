@@ -28,6 +28,7 @@ func main() {
 
 	// Tailwind files
 	e.Static("/dist", "dist")
+	e.Static("/fa", "assets/fa/")
 
 	template.NewTemplateRenderer(e,
 		template.TemplateRecipe{

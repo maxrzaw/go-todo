@@ -29,7 +29,7 @@ type HealthCheck struct {
 
 func InitDb() {
 	dsn := fmt.Sprintf(
-		"user=%s password=%s m.DBname=%s host=%s port=%s sslmode=disable TimeZone=%s",
+		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable TimeZone=%s",
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
 		os.Getenv("POSTGRES_DATABASE"),
