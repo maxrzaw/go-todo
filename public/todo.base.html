@@ -1,10 +1,11 @@
-{{ define "todo.base.html" }}
+{{ define "todo.base.html" -}}
   <div class="mb-1 flex grow items-start gap-1 rounded bg-white p-0.5">
     <p class="flex flex-shrink overflow-auto">{{ .Description }}</p>
-    {{ if .Completed }}
+    {{- if .Completed }}
       <button
         hx-put="/todo/{{ .Id }}/mark-active"
         hx-target="closest li"
+        hx-swap="outerHTML"
         class="ml-auto flex-none items-center rounded-md bg-green-300 px-1 hover:bg-green-500"
       >
         <i class="fa fa-check"></i> Mark Active
@@ -13,11 +14,12 @@
       <button
         hx-put="/todo/{{ .Id }}/mark-complete"
         hx-target="closest li"
+        hx-swap="outerHTML"
         class="ml-auto flex-none rounded-md bg-green-300 px-1 hover:bg-green-500"
       >
         <i class="fa fa-check"></i> Mark Complete
       </button>
-    {{ end }}
+    {{ end -}}
     <button
       hx-delete="/todo/{{ .Id }}"
       hx-target="closest li"
@@ -26,4 +28,4 @@
       <i class="fa fa-close"></i> Delete
     </button>
   </div>
-{{ end }}
+{{- end -}}

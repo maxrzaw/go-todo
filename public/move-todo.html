@@ -1,12 +1,13 @@
 {{ define "move-todo.html" }}
-  <li
-    id="todo-{{ .Id }}"
-    _="init put me at the end of {{ if .Completed }}
-      #completed-todos
-    {{ else }}
-      #active-todos
+  <div
+    hx-swap-oob="beforeend:#{{ if .Completed -}}
+      completed-todos
+    {{- else -}}
+      active-todos
     {{ end }}"
   >
-    {{ template "todo.base.html" . }}
-  </li>
+    <li>
+      {{ template "todo.base.html" . }}
+    </li>
+  </div>
 {{ end }}
