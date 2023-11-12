@@ -28,7 +28,7 @@ func main() {
 
 	// Tailwind files
 	e.Static("/dist", "dist")
-	e.Static("/fa", "assets/fa/")
+	e.Static("/font-awesome", "assets/font-awesome/")
 
 	template.NewTemplateRenderer(e,
 		template.TemplateRecipe{
