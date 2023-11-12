@@ -28,6 +28,7 @@ type HealthCheck struct {
 }
 
 func InitDb() {
+	SetEncryptionKey([]byte(os.Getenv("ENCRYPTION_KEY")))
 	dsn := fmt.Sprintf(
 		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable TimeZone=%s",
 		os.Getenv("POSTGRES_USER"),
